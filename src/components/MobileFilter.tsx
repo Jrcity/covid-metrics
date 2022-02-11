@@ -8,7 +8,6 @@ import {
 	Select,
 	SelectChangeEvent,
 } from '@mui/material';
-import { ChangeEvent } from 'react';
 import styled from 'styled-components';
 import { ICountryLists } from '../pages/Home';
 
@@ -22,11 +21,11 @@ const FilterBox = styled(Paper)((props) => ({
 }));
 
 type TProps = {
-	selectionValue: string;
+	selectionValue: string | undefined;
 	handleSelection: (event: SelectChangeEvent) => void;
 	handleCountrySelection: (event: SelectChangeEvent) => void;
-	country: string;
-	countries: ICountryLists[];
+	country?: string;
+	countries?: ICountryLists[];
 };
 
 function MobileFilter({

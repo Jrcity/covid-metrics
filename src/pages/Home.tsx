@@ -1,33 +1,28 @@
 /** @format */
 
 import styled from 'styled-components';
-import {
-	Button,
-	List,
-	ListItem,
-	Paper,
-	SelectChangeEvent,
-	Card,
-} from '@mui/material';
-import { useSelector } from 'react-redux';
+import { Box, Paper, SelectChangeEvent } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
+import { Hypnosis } from 'react-cssfx-loading/lib';
+import { bindActionCreators } from 'redux';
 
-import { ResponsiveChoropleth } from '@nivo/geo';
-import { features } from '../static/world_countries.json';
+import AllStatsTable from '../components/Tables/AllStatsTable';
+import MobileFilter from '../components/MobileFilter';
+import WorldMap from '../components/WorldMap';
+import DesktopFilter from '../components/DesktopFilter';
 
 import { All_Stats, getCountries } from '../apis';
-import AllStatsTable from '../components/Tables/AllStatsTable';
-import { Box } from '@mui/system';
-import MobileFilter from '../components/MobileFilter';
+import { __ACTIONS__ } from '../redux';
 
 export const SCPaper = styled(Paper)`
 	background: ${(props: string | any) => props.theme.background} !important;
 	width: 100%;
-	position: relative;
+	/* height: 100% !important; */
+	box-shadow: none !important;
+	position: relative !important;
 	display: flex;
 	overflow: hidden !important;
-	box-sizing: border-box;
-	/* flex: 1; */
 	& h1,
 	h2,
 	h3,
@@ -37,35 +32,15 @@ export const SCPaper = styled(Paper)`
 		color: ${(props) => props.theme.accent};
 	}
 `;
-
-const SCFilterDx = styled(Paper)((props) => ({
-	background: props.theme.shadows + '79 !important',
-	flex: 0.2,
-	height: '100vh',
-	position: 'sticky',
-	overflowY: 'scroll',
-	borderRadius: 0 + '!important',
-	zIndex: 2,
-}));
-
 export interface ICountryLists {
 	Country: string;
-	ThreeLetterSymbol: string;
+	ThreeLetterSymbol?: string;
 }
 
-interface IStats {
+export interface ITransformedStats {
+	Rank: number;
 	Country: string;
-	TotalCases: number;
-	TotalRecovered: number;
-	TotalDeaths: number;
-	ActiveCases: number;
-	NewCases: number;
-	NewRecovered: number;
-	NewDeaths: number;
-}
-interface ITransformedStats {
-	rank: number;
-	Country: string;
+	ThreeLetterSymbol: string;
 	TotalCases: number;
 	TotalRecovered: number;
 	TotalDeaths: number;
@@ -76,19 +51,40 @@ interface ITransformedStats {
 }
 export default function Home(props: any) {
 	const { theme } = useSelector((state: any) => state.theme);
+
 	const [selectionValue, setSelectionValue] = useState<string>('');
 	const [country, setCountry] = useState<string>('');
 	const [countries, setCountries] = useState<ICountryLists[]>([]);
-	const [stats, setStats] = useState<IStats[]>([]);
+	const [allData, setAllData] = useState<ITransformedStats[]>([]);
 
-	useEffect(() => {
+	const dispatch = useDispatch();
+	const AC = bindActionCreators(__ACTIONS__, dispatch);
+
+	const loadResource = () => {
 		(async () => {
 			let countries = await getCountries();
 			let stats = await All_Stats();
-			setCountries(countries);
-			setStats(stats);
+			let transformedCountriesData = stats?.map(
+				(items: ITransformedStats, idx: number) => ({
+					...items,
+					ThreeLetterSymbol: items.ThreeLetterSymbol.toUpperCase(),
+					Rank: idx + 1,
+				})
+			);
+			let countryLists = countries?.map((item: ICountryLists) => ({
+				...item,
+				ThreeLetterSymbol: item.ThreeLetterSymbol?.toUpperCase(),
+			}));
+			AC.AllData(transformedCountriesData);
+			AC.CountryLists(countryLists);
+
+			setAllData(transformedCountriesData);
+			setCountries(countryLists);
 		})();
-	}, []);
+	};
+
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	useEffect(loadResource, []);
 
 	function handleSelection(event: SelectChangeEvent) {
 		setSelectionValue(event.target.value);
@@ -98,110 +94,53 @@ export default function Home(props: any) {
 		setCountry(event.target.value);
 	}
 
-	const transformedStats: readonly ITransformedStats[] = stats.map(
-		(item: IStats, idx: number) => ({
-			rank: idx + 1,
-			...item,
-		})
-	);
+	const Main = (): JSX.Element => {
+		return (
+			<>
+				<MobileFilter
+					key='mobile-filter'
+					selectionValue={selectionValue}
+					country={country}
+					countries={countries}
+					handleCountrySelection={handleCountrySelection}
+					handleSelection={handleSelection}
+				/>
+				<DesktopFilter
+					key='desktop-filter'
+					handleSelection={handleSelection}
+					handleCountrySelection={handleCountrySelection}
+					selectionValue={selectionValue}
+					country={country}
+					countries={countries}
+				/>
+				<Box
+					sx={{
+						flex: { xs: 1, md: 0.8 },
+						height: '100vh',
+						overflowY: 'scroll',
+					}}>
+					<WorldMap allCountriesData={allData} />
+					<AllStatsTable rows={allData} />
+				</Box>
+			</>
+		);
+	};
 
 	return (
 		<SCPaper sx={{ flexDirection: { xs: 'column', md: 'row' } }}>
-			<MobileFilter
-				selectionValue={selectionValue}
-				country={country}
-				countries={countries}
-				handleCountrySelection={handleCountrySelection}
-				handleSelection={handleSelection}
-			/>
-
-			<SCFilterDx sx={{ display: { xs: 'none', md: 'block' } }}>
-				<List>
-					<ListItem>
-						<Button onClick={() => setSelectionValue('')}>All Countries</Button>
-					</ListItem>
-					{countries.map(({ Country, ThreeLetterSymbol }: ICountryLists) => (
-						<ListItem sx={{ flex: 1 }} key={ThreeLetterSymbol}>
-							<Button sx={{ width: '100%', textAlign: 'left' }}>
-								{Country}
-							</Button>
-						</ListItem>
-					))}
-				</List>
-			</SCFilterDx>
-			{selectionValue === 'countries' ? null : (
-				<Card
-					sx={{
-						background: theme.background,
-						flex: { xs: 1, md: 0.8 },
-						height: { xs: '100vh' },
-						overflowY: { xs: 'scroll' },
-						width: '100%',
-						zIndex: 2,
-						position: { xs: 'sticky' },
-					}}>
-					<Box sx={{ height: { xs: 700, md: '70vh' } }}>
-						<World data={stats} color={theme.accent} />
-					</Box>
-
-					<AllStatsTable rows={transformedStats} />
-				</Card>
+			{theme !== undefined ? (
+				<Main />
+			) : (
+				<Hypnosis
+					style={{
+						position: 'fixed',
+						top: 'calc(90% / 2)',
+						left: 'calc(90%/2)',
+						zIndex: 99,
+					}}
+					color={theme.link}
+				/>
 			)}
 		</SCPaper>
-	);
-}
-
-type TData = {
-	data: any[];
-	color: string;
-};
-
-function World({ data, color }: TData) {
-	let countries = data.map((item: any) => ({
-		id: item.ThreeLetterSymbol.toUpperCase(),
-		value: item.TotalCases,
-	}));
-
-	return (
-		<ResponsiveChoropleth
-			data={countries}
-			features={features}
-			margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-			colors='YlOrBr'
-			domain={[0, 1500000]}
-			unknownColor='#666666'
-			label='properties.name'
-			valueFormat='.2s'
-			projectionType='equirectangular'
-			projectionTranslation={[0.5, 0.5]}
-			projectionRotation={[0, 0, 0]}
-			projectionScale={100}
-			graticuleLineColor={color}
-			borderWidth={0.5}
-			borderColor='#152538'
-			legends={[
-				{
-					anchor: 'bottom-right',
-					direction: 'column',
-					translateX: -40,
-					translateY: -10,
-					itemsSpacing: 0,
-					itemWidth: 80,
-					itemHeight: 18,
-					itemTextColor: color,
-					itemOpacity: 0.85,
-					symbolSize: 18,
-					effects: [
-						{
-							on: 'hover',
-							style: {
-								itemTextColor: '#000000',
-								itemOpacity: 1,
-							},
-						},
-					],
-				},
-			]}
-		/>
 	);
 }

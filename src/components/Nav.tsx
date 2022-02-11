@@ -12,7 +12,6 @@ import {
 	Container,
 	Button,
 	Tooltip,
-	MenuItem,
 	List,
 	ListItem,
 	ListItemIcon,

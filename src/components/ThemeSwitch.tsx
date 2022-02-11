@@ -62,12 +62,11 @@ export default function ThemeSwitcher() {
 	let [dark, setDark] = useState(true);
 	let { theme } = useSelector((state: any) => state.theme);
 	useEffect(() => {
-		if (theme.accent === '#fff') {
-			setDark((prev) => !prev);
-		} else {
-			setDark((prev) => !prev);
+		if (theme.accent !== 'aqua') {
+			setDark(true);
+		} else if (theme.accent === 'aqua') {
+			setDark(false);
 		}
-		console.log(theme.accent);
 	}, [theme]);
 
 	const dispatch = useDispatch();

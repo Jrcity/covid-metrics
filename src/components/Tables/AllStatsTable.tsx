@@ -1,6 +1,7 @@
 /** @format */
 
 import {
+	Box,
 	IconButton,
 	Paper,
 	Table,
@@ -13,7 +14,6 @@ import {
 	TableRow,
 	useTheme,
 } from '@mui/material';
-import { Box } from '@mui/system';
 import React from 'react';
 import {
 	FaArrowLeft,
@@ -21,7 +21,30 @@ import {
 	FaBackward,
 	FaForward,
 } from 'react-icons/fa';
+import styled from 'styled-components';
 
+const TablePaper = styled(Paper)`
+	background: ${(props) => props.theme.background} !important;
+`;
+const SCTableHead = styled(TableHead)`
+	background: ${(props) => props.theme.background} !important;
+	color: ${(props) => props.theme.link} !important;
+	& * {
+		color: inherit !important;
+	}
+`;
+const SCTableFooter = styled(TableFooter)`
+	color: ${(props) => props.theme.link} !important;
+	& * {
+		color: inherit !important;
+	}
+`;
+const RowItem = styled.th`
+	color: ${(props) => props.theme.accent} !important;
+	& > * {
+		color: inherit !important;
+	}
+`;
 interface ITablePagination {
 	count: number;
 	page: number;
@@ -95,7 +118,7 @@ export default function AllStatsTable({ rows }: any): JSX.Element {
 
 	// Avoid a layout jump when reaching the last page with empty rows.
 	const emptyRows =
-		page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+		page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows?.length) : 0;
 
 	const handleChangePage = (
 		event: React.MouseEvent<HTMLButtonElement> | null,
@@ -112,18 +135,18 @@ export default function AllStatsTable({ rows }: any): JSX.Element {
 	};
 	let newRows: any =
 		rowsPerPage > 0
-			? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+			? rows?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 			: rows;
 
 	return (
 		<TableContainer
 			sx={{ position: 'sticky', paddingTop: 10, mt: 12 }}
-			component={Paper}>
+			component={TablePaper}>
 			<Table
 				stickyHeader={true}
 				sx={{ minWidth: 500 }}
 				aria-label='custom pagination table'>
-				<TableHead>
+				<TableHead component={SCTableHead}>
 					<TableRow>
 						<TableCell>Ranks</TableCell>
 						<TableCell>Country</TableCell>
@@ -137,9 +160,9 @@ export default function AllStatsTable({ rows }: any): JSX.Element {
 					</TableRow>
 				</TableHead>
 				<TableBody>
-					{newRows.map((row: any, idx: number) => (
-						<TableRow hover key={row.rank}>
-							<TableCell scope='row'>{row.rank}</TableCell>
+					{newRows?.map((row: any) => (
+						<TableRow component={RowItem} hover key={row.Rank}>
+							<TableCell scope='row'>{row.Rank}</TableCell>
 							<TableCell component='th' scope='row'>
 								{row.Country}
 							</TableCell>
@@ -172,12 +195,12 @@ export default function AllStatsTable({ rows }: any): JSX.Element {
 						</TableRow>
 					)}
 				</TableBody>
-				<TableFooter>
+				<TableFooter component={SCTableFooter}>
 					<TableRow>
 						<TablePagination
 							rowsPerPageOptions={[10, 25, 50, { label: 'All', value: -1 }]}
 							colSpan={6}
-							count={rows.length}
+							count={rows?.length}
 							rowsPerPage={rowsPerPage}
 							page={page}
 							SelectProps={{

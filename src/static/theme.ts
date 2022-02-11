@@ -1,6 +1,6 @@
 /** @format */
 
-import { blue, blueGrey, common, grey, pink } from '@mui/material/colors';
+import { blue, blueGrey, grey, pink } from '@mui/material/colors';
 
 interface colorScheme {
 	accent: string;
@@ -13,21 +13,21 @@ interface colorScheme {
 }
 
 export const DarkMode: colorScheme = {
-	accent: common.white,
-	background: blueGrey[900],
+	accent: 'aqua',
+	background: '#1d1d2a',
 	card: grey.A700,
-	link: blue.A700,
+	link: pink.A100,
 	primary: blueGrey[100],
-	secondary: grey[700],
-	shadows: grey.A200,
+	secondary: '#212529',
+	shadows: blueGrey.A700,
 };
 
 export const LightMode: colorScheme = {
-	accent: common.black,
-	background: blue[50],
+	accent: '#133154',
+	background: '#dddddd',
 	card: grey.A700,
-	link: pink.A700,
+	link: blue.A700,
 	primary: grey[700],
-	secondary: blueGrey[200],
-	shadows: blueGrey.A200,
+	secondary: '#f7fafb',
+	shadows: grey.A700,
 };
